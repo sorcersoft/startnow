@@ -1,0 +1,10 @@
+<project name="install-libs" default="cleanup">
+<target name="cleanup" unless="cleanup-completed"
+	description="cleanup build directory">
+	<ant 
+		antfile="build.ant"
+		target="clean">
+	</ant>
+</target>
+	
+</project>

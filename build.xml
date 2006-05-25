@@ -1,0 +1,48 @@
+<project name="startnow" default="build">
+<target name="build" unless="build-all-completed"
+	description="build startnow">
+	<ant antfile="build.ant" target="build">
+		<property name="j" value="/usr/local/classes"/>
+		<property name="c" value="/usr/local/classes"/>
+		<property name="cl" value="/usr/local/classes"/>
+	</ant>
+</target>
+<target name="debug-nb">
+	<ant 
+		antfile="build.ant"
+		target="debug-nb">
+	</ant>
+</target>
+<target name="clean" unless="clean-completed"
+	description="clean startnow">
+	<ant 
+		antfile="build.ant"
+		target="clean">
+	</ant>
+</target>
+
+<target name="javadoc" unless="javadoc-completed"
+	description="javadoc startnow">
+	<ant 
+		antfile="build.ant"
+		target="javadoc">
+	</ant>
+</target>
+
+<target name="run" unless="run-completed"
+	description="run startnow">
+	<ant 
+		antfile="build.ant"
+		target="run">
+	</ant>
+</target>
+
+<target name="test" unless="test-completed"
+	description="test startnow">
+	<ant 
+		antfile="build.ant"
+		target="test">
+	</ant>
+</target>
+
+</project>

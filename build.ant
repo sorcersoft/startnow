@@ -1,0 +1,318 @@
+<project name="startnow" default="build">
+<property name="root" location="c:/cvs/java.net/startnow"/>
+<property name="c" location="lib"/>
+<property name="cl" location="j:"/>
+<property name="jini" location="${cl}/jini/cyte"/>
+<property name="build" location="build"/>
+<property name="classes" location="${build}/classes"/>
+<property name="buildjars" location="${build}/jars"/>
+<property name="jars" location="jars"/>
+<property name="j" value="j:"/>
+<property name="version" value="1.5"/>
+<property name="adminuisrc" location="src"/>
+<property name="startnowsrc" location="src"/>
+<property name="www" location="www"/>
+
+<path id="startnow.classpath">
+	<pathelement path="${c}/packer.jar"/>
+	<pathelement path="${cl}/javahelp/jhall.jar"/>
+	<pathelement path="${c}/swingutil1.5.jar"/>
+	<pathelement path="${c}/cytetech5.jar"/>
+	<pathelement path="${jini}/lib/jini-ext.jar"/>
+	<pathelement path="${jini}/lib/jini-core.jar"/>
+	<pathelement path="${jini}/lib/sun-util.jar"/>
+	<pathelement path="${c}/serviceui.jar"/>
+	<pathelement path="${j}/javaws.jar"/>
+	<pathelement path="${classes}/"/>
+</path>
+
+<path id="configprovider.classpath">
+	<pathelement path="${c}/packer.jar"/>
+	<pathelement path="${c}/swingutil1.5.jar"/>
+	<pathelement path="${jini}/lib/jini-ext.jar"/>
+	<pathelement path="${jini}/lib/jini-core.jar"/>
+	<pathelement path="${jini}/lib/sun-util.jar"/>
+	<pathelement path="${c}/serviceui.jar"/>
+	<pathelement path="${j}/javaws.jar"/>
+	<pathelement path="${classes}"/>
+</path>
+
+<path id="depandjar.classpath">
+	<pathelement path="${c}/packer.jar"/>
+	<pathelement path="${c}/swingutil1.5.jar"/>
+	<pathelement path="${cl}/classdepandjar.jar"/>
+	<pathelement path="${jini}/lib/tools.jar"/>
+</path>
+
+<target name="build" unless="build-completed"
+	description="Builds the whole tree"
+	depends="clean,compile,rmic,jar,testjar,updjar,javadoc">
+</target>
+
+<target name="run" unless="run-completed">
+	<java classpathref="startnow.classpath" 
+		classname="org.wonderly.jini2.browse.JiniDeskTop">
+		<sysproperty key="java.util.logging.config.file" value="C:/perforce/cyte/Products/EOI/main/logging.config"/>
+		<sysproperty key="codeserver.path" value="startnow.jar jini/2_0_002/sdm-dl.jar"/>
+		<sysproperty key="codeserver.config.file" value="x:/kawa/findbrowser.cfg"/>
+		<sysproperty key="java.security.login.modules" value="c:/Documents and Settings/Owner/.java.login.config"/>
+		<sysproperty key="java.protocol.handler.pkgs" value="net.jini.url|org.wonderly.url"/>
+		<sysproperty key="xjava.rmi.server.RMIClassLoaderSpi" value="org.wonderly.util.jini2.DynamicClassAnnotationProvider"/>
+		<sysproperty key="xjava.security.policy" value="t:/Products/EOI/main/desktop.policy"/>
+		<sysproperty key="java.security.policy" value="x:/kawa/security/spyder4.0.policy "/>
+		<sysproperty key="java.rmi.server.RMIClassLoaderSpi" value="com.cytetech.jini.MdClassAnnotationProvider"/>
+		<sysproperty key="export.codebase" value="httpmd://localhost:8080/startnow.jar;md5=0"/>
+		<sysproperty key="export.codebase.source" value="j:/"/>
+		<arg value="x:/kawa/findbrowser.cfg"/>
+	</java>
+</target>
+<target name="debug-nb">
+    <nbjpdastart addressproperty="jpda.address" name="Startnow" transport="dt_socket">
+        <classpath refid="startnow.classpath"/>
+    </nbjpdastart>
+        <echo message="running with debugger"/>
+    <!-- TODO configure the main class for your project here: -->
+    <java classpathref="startnow.classpath"
+            classname="org.wonderly.jini2.browse.JiniDeskTop" fork="true">
+        <jvmarg value="-Xdebug"/>
+        <jvmarg value="-Xnoagent"/>
+        <jvmarg value="-Djava.compiler=none"/>
+        <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+        <sysproperty key="java.util.logging.config.file" value="C:/perforce/cyte/Products/EOI/main/logging.config"/>
+        <sysproperty key="codeserver.path" value="startnow.jar jini/2_0_002/sdm-dl.jar"/>
+        <sysproperty key="codeserver.config.file" value="x:/kawa/findbrowser.cfg"/>
+        <sysproperty key="java.security.login.modules" value="c:/Documents and Settings/Owner/.java.login.config"/>
+        <sysproperty key="java.protocol.handler.pkgs" value="net.jini.url|org.wonderly.url"/>
+        <sysproperty key="xjava.rmi.server.RMIClassLoaderSpi" value="org.wonderly.util.jini2.DynamicClassAnnotationProvider"/>
+        <sysproperty key="xjava.security.policy" value="t:/Products/EOI/main/desktop.policy"/>
+        <sysproperty key="java.security.policy" value="x:/kawa/security/spyder4.0.policy "/>
+        <sysproperty key="java.rmi.server.RMIClassLoaderSpi" value="com.cytetech.jini.MdClassAnnotationProvider"/>
+        <sysproperty key="export.codebase" value="httpmd://localhost:8080/startnow.jar;md5=0"/>
+        <sysproperty key="export.codebase.source" value="j:/"/>
+        <arg value="x:/kawa/findbrowser.cfg"/>
+    </java>
+</target>
+<target name="all" unless="build-completed"
+	description="Builds the whole tree"
+	depends="clean,compile,rmic,jar,testjar,javadoc,zipsrc,updjar,cleanbld">
+</target>
+
+<target name="updjar" unless="updjar-completed" >
+	<copy file="${buildjars}/startnow.jar"
+		todir="${jars}"/>
+	<copy file="${buildjars}/startnow-concat.jar"
+		todir="${jars}"/>
+	<copy file="${buildjars}/startnow-config.jar"
+		todir="${jars}"/>
+	<copy file="${buildjars}/http-server.jar"
+		todir="${jars}"/>
+
+	<copy file="${buildjars}/startnow.jar"
+		todir="${j}"/>
+	<copy file="${buildjars}/startnow-concat.jar"
+		todir="${j}"/>
+	<copy file="${buildjars}/startnow-config.jar"
+		todir="${j}"/>
+	<copy file="${buildjars}/http-server.jar"
+		todir="${j}"/>		
+</target>
+
+<target name="cleanbld" unless="cleanbld-completed">
+	<delete dir="${classes}"/>
+</target>
+
+<target name="testjar" unless="testjar-completed">
+	<mkdir dir="${classes}/META-INF"/>
+	<copy todir="${classes}/META-INF"
+		overwrite="true"
+		file="${startnowsrc}/META-INF/PREFERRED.LIST"/>
+	<copy tofile="${classes}/META-INF/services/net.jini.config.Configuration"
+		overwrite="true"
+		file="${startnowsrc}/org/wonderly/jini2/config/test/config.data"/>
+	<mkdir dir="${startnowsrc}/org/wonderly/jini2/config/test/buildjars"/>
+	<jar destfile="${startnowsrc}/org/wonderly/jini2/config/test/buildjars/startnow.jar"
+		basedir="${classes}"
+		filesonly="true"
+	/>
+	<delete file="${classes}/META-INF/services/net.jini.config.Configuration"/>
+</target>
+
+<target name="jar" unless="jar-completed"
+	depends="sysjar,testjar,httpjar,depandjar,concatjar">
+</target>
+
+<target name="zipsrc" unless="zipsrc-completed">
+	<jar destfile="${www}/src.zip"
+		>
+		<fileset dir="." includes="src/**"/> 
+		<fileset dir="." includes="test/**"/> 
+		<fileset dir="." includes="www/*.html"/> 
+		<fileset dir="." includes="www/tut/"/> 
+		<fileset dir="." includes="*.xml"/> 
+		<fileset dir="." includes="*.ant"/> 
+	</jar>
+</target>
+
+<target name="sysjar" unless="sysjar-completed">
+	<mkdir dir="${classes}/META-INF"/>
+	<copy todir="${classes}/META-INF"
+		overwrite="true"
+		file="${startnowsrc}/META-INF/PREFERRED.LIST"/>
+	<jar destfile="${buildjars}/startnow.jar"
+		basedir="${classes}"
+		filesonly="true"
+	/>
+</target>
+
+<target name="httpjar" unless="httpjar-completed">
+	<mkdir dir="${buildjars}"/>
+	<depjar files="true" jarfile="${buildjars}/http-server.jar">
+		<topclass name="org.wonderly.jini2.HttpServerService"/>
+		<topclass name="org.wonderly.jini.serviceui.AdminDescriptor"/>
+		<topclass name="org.wonderly.jini2.HttpServerAccess"/>
+		<topclass name="org.wonderly.jini2.HttpServerInfo"/>
+		<hide name="javax"/>
+		<hide name="javax.security"/>
+		<hide name="java"/>
+		<hide name="sun"/>
+		<hide name="org.apache"/>
+		<hide name="org.w3c"/>
+		<hide name="net.jini"/>
+		<hide name="com.sun.jini"/>
+		<hide name="org.xml"/>
+		<classpath refid="startnow.classpath"/>
+	</depjar>
+</target>
+
+<target name="depandjar" unless="depandjar-completed">
+	<depjar files="true" jarfile="${buildjars}/startnow-config.jar">
+		<topclass name="org.wonderly.jini2.config.ConfigurationProvider"/>
+		<topclass name="org.wonderly.jini2.config.ConfigurationConcatenator"/>
+		<hide name="javax"/>
+		<hide name="javax.security"/>
+		<hide name="java"/>
+		<hide name="sun"/>
+		<hide name="org.apache"/>
+		<hide name="org.w3c"/>
+		<hide name="net.jini"/>
+		<hide name="com.sun.jini"/>
+		<hide name="org.xml"/>
+		<classpath refid="configprovider.classpath"/>
+	</depjar>
+</target>
+
+<target name="concatjar" unless="concatjar-completed">
+	<depjar files="true" jarfile="${buildjars}/startnow-concat.jar">
+		<topclass name="org.wonderly.jini2.config.ConfigurationConcatenator"/>
+		<hide name="javax"/>
+		<hide name="javax.security"/>
+		<hide name="java"/>
+		<hide name="sun"/>
+		<hide name="org.apache"/>
+		<hide name="org.w3c"/>
+		<hide name="net.jini"/>
+		<hide name="com.sun.jini"/>
+		<hide name="org.xml"/>
+		<classpath refid="configprovider.classpath"/>
+	</depjar>
+	<mkdir dir="${classes}/concat"/>
+	<unjar dest="${classes}/concat"
+		src="${buildjars}/startnow-concat.jar"/>
+	<mkdir dir="${classes}/concat/META-INF/services"/>
+	<copy file="${startnowsrc}/concat.spec"
+		tofile="${classes}/concat/META-INF/services/net.jini.config.Configuration"/>
+	<jar destfile="${buildjars}/startnow-concat.jar"
+		basedir="${classes}/concat"
+		filesonly="true"/>
+	<delete dir="${classes}/concat"/>
+</target>
+
+<target name="rmic" unless="rmic-completed"
+	description="Run RMIC on remote classes"
+	depends="compile">
+	<rmic classname="org.wonderly.util.jini2.RemoteListener"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.util.jini.RemoteListener"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.util.jini.JiniAdmin"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.jini.browse.JiniExplorerImpl"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.jini.serviceui.PropertiesUIDemo"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.jini2.browse.JiniExplorerImpl"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.util.jini2.RemoteListener"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.util.jini2.JiniAdmin"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.jini2.demo.JiniExplorerDemo"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.jini2.PersistentJiniService"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.jini2.demo.SimpleService"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+	<rmic classname="org.wonderly.util.jini2.JiniAdmin"
+		classpathref="startnow.classpath"
+		base="${classes}"/>
+</target>
+
+<target name="javadoc" unless="javadoc-completed"
+	description="Build Javadoc Tree">
+	<mkdir dir="www/javadocs"/>
+	<javadoc 
+		destdir="www/javadocs"
+		author="true"
+		version="true"
+		use="true"
+		classpathref="startnow.classpath"
+		useexternalfile="true"
+		packagenames="">
+	<fileset dir="${adminuisrc}"/>
+	<fileset dir="${startnowsrc}"/>
+	<link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+	<link href="http://java.sun.com/products/jini/2.0/doc/api/"/>
+	</javadoc>
+</target>
+
+<target name="compile" unless="compile-completed"
+	description="Builds the whole tree"
+	depends="mkdirs">
+
+	<javac debug="true"	destdir="${classes}"
+		target="1.5" source="1.5"
+		
+			classpathref="startnow.classpath">
+		<src path="${adminuisrc}"/>
+		<src path="${startnowsrc}"/>
+	</javac>
+
+</target>
+
+<taskdef name="depjar"
+	classname="org.jini.project.example.jade.tools.ClassDepAndJarTask">
+	<classpath refid="depandjar.classpath"/>
+</taskdef>
+
+<target name="clean" depends="cleanbld">
+</target>
+
+<target name="mkdirs">
+	<delete dir="${classes}"/>
+	<mkdir dir="${classes}"/>
+	<delete dir="${buildjars}"/>
+	<mkdir dir="${buildjars}"/>
+</target>
+
+</project>

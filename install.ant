@@ -1,0 +1,10 @@
+<project name="install-libs" default="install">
+<target name="install" unless="install-completed"
+	description="Install jars in production directory">
+	<ant 
+		antfile="build.ant"
+		target="all">
+	</ant>
+</target>
+	
+</project>

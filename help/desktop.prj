@@ -1,0 +1,13 @@
+[Settings]
+html=HTML
+images=Images
+ccs=C:\cvs\jini.org\startnow\help\javahelp.css
+i=desktopIndex.xml
+g=desktopGlossary.xml
+last_path=C:\cvs\jini.org\startnow\help\HTML
+prefix list=start,
+preview=1
+css=C:\p4_localhost1666_BROYLESLAPTOP\development\Releases\StartNow\startnow\help\javahelp.css
+t=desktopTOC.xml
+[IMAGE MAP]
+MapCount=0

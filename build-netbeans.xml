@@ -1,0 +1,38 @@
+<project name="Startnow" default="build">
+	<target name="build">
+		<ant antfile="build.ant" target="build">
+		</ant>
+	</target>
+	<target name="all">
+		<ant antfile="build.ant" target="all">
+		</ant>
+	</target>
+	<target name="javadoc">
+		<ant antfile="build.ant" target="javadoc">
+		</ant>
+	</target>
+	<target name="sync-source">
+		<ant antfile="build.ant" target="sync-source">
+		</ant>
+	</target>
+	<target name="run">
+		<ant antfile="build.ant" target="run">
+		</ant>
+	</target>
+	<target name="run-client">
+		<ant antfile="build.ant" target="run-client">
+		</ant>
+	</target>
+	<target name="run-server">
+		<ant antfile="build.ant" target="run-server">
+		</ant>
+	</target>
+	<target name="clean">
+		<ant antfile="build.ant" target="clean">
+		</ant>
+	</target>
+	<target name="test">
+		<ant antfile="build.ant" target="test">
+		</ant>
+	</target>
+</project>

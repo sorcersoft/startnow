@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='ISO-8859-1'  ?>
+<!DOCTYPE index
+  PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Index Version 2.0//EN"
+         "http://java.sun.com/products/javahelp/index_2_0.dtd">
+<index version="2.0">
+
+<indexitem text="All Apps" target="startGetting_Started"/>
+<indexitem text="EOI" target="startEOI_Desktop"/>
+<indexitem text="Getting Started" target="startGetting_Started"/>
+<indexitem text="More Apps" target="startGetting_Started"/>
+<indexitem text="My Apps" target="startGetting_Started"/>
+<indexitem text="My Groups" target="startManaging__My_Groups_"/>
+<indexitem text="Opening UIs in Tabs" target="startOpening_UIs_in_Tabs_or_Frames"/>
+<indexitem text="Opening UIs in Top-Level Frames" target="startOpening_UIs_in_Tabs_or_Frames"/>
+<indexitem text="Switching a UIs Container" target="startOpening_UIs_in_Tabs_or_Frames"/>
+</index>

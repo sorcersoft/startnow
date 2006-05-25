@@ -1,45 +1,354 @@
 <html>
 <head>
-<title>Project Home Page</title>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Start NOW Jini.org project</title>
 </head>
+<body>
 
-<body bgcolor="#FFFFFF" text="#000000">
-<h1>Default project home page </h1>
-<p>Congratulations on your new java.net project! </p>
-<p>This page is the home page for your new project. This content is appearing 
-  because you have selected the option <b>Use project index.html</b>. To edit 
-  the information displayed on this page, just use CVS to check out your project's 
-  CVS repository and edit index.html in directory www. You can get more information 
-  on how to set-up your local CVS client, click on <b>Version Control</b> on the 
-  left nav bar. </p>
-<p>If you don't want to use CVS to manage your home page, click on the <b>Edit 
-  project</b> link on this page and unclick the option <b>Use project index.html</b>. 
-  Your project home page contents will be generated from the <b>Edit project</b> 
-  field <b>Description</b>. Edit the text on that field to change your home page 
-  contents. Click on <b>Submit changes</b> to save your edits. </p>
-<p>If you are looking for <a href="https://java-net.dev.java.net/ProjectPages.html#templates">sample 
-  home page templates</a>, check out the <a href="https://java-net.dev.java.net/ProjectPages.html">java.net 
-  Project Starter Kit</a>. Copy either of the templates into your project's html 
-  to get started on your project's home page. </p>
-<p>You can find lots of helpful information in the Starter Kit to get your project 
-  started. Some of the things you will find in there include:</p>
-<ul>
-  <li>Hints on how to <a href="https://java-net.dev.java.net/ProjectPages.html#pages">set-up 
-    your project's</a> home page</li>
-  <li>Ideas on how to <a href="https://java-net.dev.java.net/ProjectPages.html#publicity">publicize 
-    your project</a> including RSS feeds</li>
-  <li>Hints on <a href="https://java-net.dev.java.net/pagedesign.html">project 
-    page HTML</a></li>
-  <li>Setting up project <a href="https://java-net.dev.java.net/ProjectPages.html#wiki">wiki 
-    pages</a></li>
-  <li>And places to go if <a href="https://java-net.dev.java.net/ProjectPages.html#feedback">you 
-    have questions</a>.</li>
-</ul>
-<p>Remember that you will attract more new members and your project team will 
-  work more effectively if you, as the project owner, supply sufficient information 
-  about your project for visitors to your project space. Good luck with your new 
-  project! </p>
+<h1>
+<font color="#FF0000">Welcome to the Start NOW project!</font>
+</h1>
+<hr WIDTH="100%">
+This project is about some tools that I have created and which I find very handy
+for creating Jini services and clients out of existing applications.  If you
+are interested in such tools/classes, please join the mailing list and
+participate or comment on the project.
+<p/>
+Here are the top level classes that I find useful:
+<ol>
+<li><a href="#p1">Concrete Jini Service Parent Class</a>
+<li><a href="#p2">Jini Lookup Environment Container Class</a>
+<li><a href="#p3">Singleton Service Selector GUI component</a>
+<li><a href="#p4">Custom Protocol Handler for Caching Codebase Downloads</a>
+<li><a href="#p5">Server Thread Template for Managing Exceptions</a>
+<li><a href="#p6">JService - A Windows NT Service runner application</a>
+</ol>
+<hr size="5"/>
+<a name="p1"/>
+<h3><b>1. Concrete Jini Service Class for Jini'fying Existing Apps</b></h3>
+A <b>Jini service core</b> object that you can use as a base class or it can delegate
+to your existing service.&nbsp; The <tt>PersistantJiniService</tt> class
+should be extended by your base class, adding whatever exportable interfaces
+you want in your implementation.</li>
+
+<h4>For Non-Remotely Administrable...</h4>
+Here we simply change the parent class from Object or whatever it was before to
+be the <code>PersistantJiniService</code> class so that we get all of its
+behavior.
+<pre>
+public class MyService extends PersistantJiniService implements MyServiceInterface {
+	public MyService() throws RemoteException {
+		String name = "MyService";
+		// Start the jini service registration process
+		startService( name, "jini-state.ser",
+			new Entry[] {
+				new Name( name )
+			}, new String[]{""}, null,
+			new OutputStreamWriter(System.out) );
+	}
+	public void myServiceMethod1() {
+	}
+	public int myServiceMethod2( String arg1 ) {
+	}
+}
+</pre>
+
+<h4>For Remotely Administrable...</h4>
+Here we add the Administrable interface so that the <code>getAdmin()</code> method is visible via that interface and the Jini admin interfaces will thus be
+accessible.
+<pre>
+public class MyService extends PersistantJiniService implements MyServiceInterface,Administrable {
+	public MyService() throws RemoteException {
+		super();
+		// Start the jini service registration process
+		String name = "MyService";
+		startService( name, "jini-state.ser",
+			new Entry[] {
+				new Name( name )
+			}, new String[]{""}, null,
+			new OutputStreamWriter(System.out) );
+	}
+	public void myServiceMethod1() {
+	}
+	public int myServiceMethod2( String arg1 ) {
+	}
+}
+</pre>
+
+You could also just export a different object that delegates to your existing
+application/class if you can not extend <tt>PersistantJiniService.</tt>
+
+<h4>For Delegating to the Original Application...</h4>
+In this case we just create a new class the extends
+<code>PersistantJiniService</code> and create an instance of our applications
+class.  We start Jini up and can thus delegate using the <code>app</code>
+reference to our application instance.
+<pre>
+class MyPersistantJiniService extends PersistantJiniService
+	implements MyServiceInterface,Administrable {
+	MyExistingApp app;
+	public MyPersistantJiniService(String args[]) {
+		super();
+		// Create the application, this constructor must
+		// return...
+		app = new MyExistingApp(args);
+
+		// Start the jini service registration process
+		String name = "MyService";
+		startService( name, "jini-state.ser",
+			new Entry[] {
+				new Name( name )
+			}, new String[]{""}, null,
+			new OutputStreamWriter(System.out) );
+	}
+	public void myServiceMethod1() {
+		app.myServiceMethod1();
+	}
+	public int myServiceMethod2( String arg1 ) {
+		app.myServiceMethod2(arg1);
+	}
+}
+</pre>
+<hr size="5"/>
+<a name="p2"/>
+<h3><b>2. Jini Lookup Services Environment Container Class.</b></h3>
+The <code>LookupEnv</code>, class provides a container for lookup service
+interactions.  Both registration and lookup activities require several different
+values that are more easily managed when wrapped in a container and kept
+together.  The <a href="#p3">ServiceSelector class</a> can use this class to
+let the user select from a wide range of configurations for finding the
+service the user needs.
+<h4>Constructing the Object All At Once</h4>
+<pre>
+LookupEnv env = new LookupEnv( "Public Administrable",
+	new ServiceTemplate( null, new Class[]{Administrable.class}, null ),
+	new String[] {"mygroup"},
+	new LookupLocator[]{
+		new LookupLocator("mylocator.domain.com")
+	} );
+</pre>
+
+<h4>Constructing the Object Incrementally</h4>
+
+<pre>
+// Get a Lookup Environment object
+LookupEnv env = new LookupEnv( "Public Administrable" );
+
+// Add the template to be used for lookups
+env.setServiceTemplate( new ServiceTemplate( null,
+	new Class[]{Administrable.class}, null ) );
+
+// Add my group to the environment
+env.addGroup("mygroup");
+
+// Add the locator I need
+env.addLookupLocator("mylocator.domain.com");
+
+// Get a lookup locator from another source
+LookupLocator otherLocator = ...
+env.addLookupLocator(otherLocator);
+</pre>
+
+<hr size="5"/>
+<a name="p3"/>
+<h3><b>3. Singleton Service Selector GUI Component</b></h3>
+A <b>Jini client selection component</b>.
+This is a swing component that you provide lookup information to, and it
+lets you select the service you want to use. It lets you register
+for ActionEvents, and it will then return events to you that let you
+activate/use
+the service that the user selects.
+
+<h4>Creating a Multiple Selection Dialog</h4>
+
+<pre>
+
+String myLocator = null;
+
+...
+
+LookupEnv envs[] = new LookupEnv[6];
+LookupEnv env1 = new LookupEnv( "Public Administrable",
+	new ServiceTemplate( null, new Class[]{Administrable.class}, null ) );
+LookupEnv env2 = new LookupEnv( "Public Lookup Services",
+	new ServiceTemplate( null, new Class[]{ServiceRegistrar.class}, null ) );
+LookupEnv env3 = new LookupEnv( "Public Event MailBoxes",
+	new ServiceTemplate( null, new Class[]{EventMailbox.class}, null ) );
+LookupEnv env4 = new LookupEnv( "Public JavaSpaces",
+	new ServiceTemplate( null, new Class[]{JavaSpace.class}, null ) );
+LookupEnv env5 = new LookupEnv( "Public Transaction Managers",
+	new ServiceTemplate( null, new Class[]{TransactionManager.class}, null ) );
+LookupEnv env6 = new LookupEnv( "All Public Services",
+	new ServiceTemplate( null, null, null ) );
+envs[0] = env1;
+envs[1] = env2;
+envs[2] = env3;
+envs[3] = env4;
+envs[4] = env5;
+envs[5] = env6;
+for( int i = 0; i < envs.length; ++i ) {
+	envs[i].addLookupLocator( myLocator );
+}
+os = new ServiceSelector( f,"Server Selection", envs );
+
+// Receive events about what the system and the user is doing
+os.addActionListener( new ActionListener() {
+	public void actionPerformed( ActionEvent ev ) {
+		if( ev.getID() == os.SERVICE_SELECTED ) {
+			Object[]arr = (Object[])ev.getSource();
+			ServiceItem it = (ServiceItem)arr[0];
+			ServiceRegistrar reg = (ServiceRegistrar)arr[1];
+			System.out.println("Selected Service: "+
+				it.serviceID+" from: "+reg );
+			... do something with it...
+		} else if( ev.getID() == os.SERVICE_LOST ) {
+			// Should remove from menu of selectable services
+			// if we used arr[2] on SERVICE_FOUND.
+		} else if( ev.getID() == os.SERVICE_FOUND ) {
+			// Could take arr[2] here and use it in a
+			// menu of selectable services
+		}
+	}
+});
+
+// Make the dialog visible to the user
+os.setVisible(true);
+
+// Control returns to here when dialog is closed.
+...
+
+</pre>
+
+<h4>Creating a Single Service Type Dialog</h4>
+
+<pre>
+
+// Create the Selector
+ServiceSelector os = new ServiceSelector( f,"Server Selection",
+	new ServiceTemplate(
+		null,
+		new Class[] { ...interfaces... },
+		Entry[] {...entries...} ), new String[]{ ...groups...} );
+
+// Use a specific unicast locator if needed
+os.setLookupServer( System.getProperty("jini.locator.host") );
+
+// Receive events about what the system and the user is doing
+os.addActionListener( new ActionListener() {
+	public void actionPerformed( ActionEvent ev ) {
+		if( ev.getID() == os.SERVICE_SELECTED ) {
+			Object[]arr = (Object[])ev.getSource();
+			ServiceItem it = (ServiceItem)arr[0];
+			ServiceRegistrar reg = (ServiceRegistrar)arr[1];
+			System.out.println("Selected Service: "+
+				it.serviceID+" from: "+reg );
+			... do something with it...
+		} else if( ev.getID() == os.SERVICE_LOST ) {
+			// Should remove from menu of selectable services
+			// if we used arr[2] on SERVICE_FOUND.
+		} else if( ev.getID() == os.SERVICE_FOUND ) {
+			// Could take arr[2] here and use it in a
+			// menu of selectable services
+		}
+	}
+});
+
+// Make the dialog visible to the user
+os.setVisible(true);
+
+// Control returns to here when dialog is closed.
+...
+
+</pre>
+
+The use of this component allows
+existing RMI based applications that use JNDI or other mechanisms to get
+proxies, do allow the user to select a proxy directly.&nbsp; This might
+be convienent for debugging, but it is also essential for adding Jini access
+to services that you wish to have a UI for that allows all instances of
+the service to be accessed.&nbsp; This class has a sample <tt>main()</tt>
+method in it that demostrates its use.</li>
+
+<hr size="5"/>
+<a name="p4"/>
+<h3><b>4. Custom Protocol Handler</b></h3>
+A <b>custom protocol handler</b> that can provide caching
+and download progress display if desired.&nbsp; This protocol handler can
+be configured for use by any java application by using -Djava.protocol.handler.pkgs=org.wonderly.url
+on the command line, or you can set this property before opening an associated
+URL.&nbsp; There are two static methods on the handler that let you set
+a parent component for the download progress display, and specify the caching
+directory.&nbsp; If you do not call these methods, you do not get that
+functionality, and the protocol handler then just becomes a delegate to
+the real http: handler.&nbsp; Thus, it can seemlessly integrate with any
+java application that might receive RMI downloaded code from your application.
+<p>
+This class has documentation in JavaDoc form that shows its usage.
+<pre>
+	if( System.getProperty("java.protocol.handler.pkgs") == null ) {
+		System.getProperties().put("java.protocol.handler.pkgs",
+			"org.wonderly.url");
+	}
+	JFrame top;
+	...
+	// Set the parent frame for JDialog homing.
+	org.wonderly.url.vhttp.Handler.setParent(top);
+	// Set caching directory as 'cache' under the running directory.
+	org.wonderly.url.vhttp.Handler.setCacheDir("cache");
+</pre>
+<hr size="5"/>
+<a name="p5"/>
+<h3><b>5. Server Thread Template Class</b></h3>
+The <code>ForeverThread</code> class provides a simple to use class that
+provides the simple infrastructure needed to keep a server thread running
+forever.
+<pre>
+
+new Thread( new ForeverThread() {
+	public void process() throws IOException {
+		Socket s = new Socket( "remotehost", reportport );
+		try {
+			BufferedReader rd = s.getInputStream();
+			String line;
+			while( (line = rd.readLine()) != null) {
+				processLine( line );
+			}
+		} finally {
+			s.close();
+		}
+	}
+	public void reportException( Throwable ex ) {
+		ex.printStackTrace();
+	}
+}, "MyProcessingThread").start(); 
+
+...
+
+public void processLine( String line ) {
+	... do something with lines read from socket ...
+}
+
+</pre>
+The processLine method can do what it wants with the String objects passed
+to it, and can declare any exceptions that match IOException as being
+thrown (in this example, <code>process()</code> only throws IOException).
+This class is very handy to make sure you cover your bases on server threads to keep them from being stopped by any kind of failures (including
+Error type Throwable instances) so that the thread stays running until the
+VM process is stopped.
+<hr size="5"/>
+<a name="p6"/>
+<h3><b>6. JService - A Windows NT Service Runner</b></h3>
+This package is an MFC application that provides a wrapper for starting
+and running Java applications as NT services.  It provides access to the
+System's Application Event Log for event logging.  The application is free
+to use this mechanism or another if desired.  The stdout of the JVM process can be directed to a file or to a user provided OutputStream implementation to
+allow an applications output to be directed to someplace that it can be viewed.
+<p>
+Look in the CVS section for the jservice.exe already compiled and the
+<code>Readme.txt</code> that explains the command line usage.
+There is an <code>ntservice.bat</code> file that provides an example
+of how to use the service starter.
+<hr/>
+<br>Gregg Wonderly
+<br><a href="mailto:gregg.wonderly@pobox.com">gregg.wonderly@pobox.com</a>
 </body>
 </html>
-

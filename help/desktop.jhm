@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='ISO-8859-1'  ?>
+<!DOCTYPE map
+  PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Map Version 1.0//EN"
+         "http://java.sun.com/products/javahelp/map_1_0.dtd">
+<map version="1.0">
+
+
+<!-- Images -->
+
+
+<!-- Topics -->
+
+   <mapID target="startEOI_Desktop" url="HTML/EOI_Desktop.htm"/>
+   <mapID target="startGetting_Started" url="HTML/Getting_Started.htm"/>
+   <mapID target="startManaging__My_Groups_" url="HTML/Managing__My_Groups_.htm"/>
+   <mapID target="startOpening_UIs_in_Tabs_or_Frames" url="HTML/Opening_UIs_in_Tabs_or_Frames.htm"/>
+
+<!-- Index Bookmarks -->
+
+
+</map>

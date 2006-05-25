@@ -1,0 +1,10 @@
+<project name="jar-libs" default="jar">
+<target name="jar" unless="jar-completed"
+	description="build jars">
+	<ant 
+		antfile="build.ant"
+		target="zipsrc">
+	</ant>
+</target>
+	
+</project>
