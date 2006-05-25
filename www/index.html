@@ -56,7 +56,7 @@ public class MyService extends PersistantJiniService implements MyServiceInterfa
 Here we add the Administrable interface so that the <code>getAdmin()</code> method is visible via that interface and the Jini admin interfaces will thus be
 accessible.
 <pre>
-public class MyService extends PersistantJiniService implements MyServiceInterface,Administrable {
+public class MyService extends PersistantJiniService implements MyServiceInterface, RemoteAdministrable {
 	public MyService() throws RemoteException {
 		super();
 		// Start the jini service registration process
