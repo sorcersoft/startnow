@@ -1,0 +1,8 @@
+<lookupEnvs>
+	<lookupEnv codebase="http://myserver.address.com/myjar-cl.jar" 
+			name="Service UIs">
+		<group name=""/>
+		<locator name="my.distant.lus.com"/>
+		<entry class="net.jini.lookup.entry.UIDescriptor"/>
+	</lookupEnv>
+</lookupEnvs>

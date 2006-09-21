@@ -62,7 +62,7 @@ import org.wonderly.swing.VectorListModel;
 import org.wonderly.util.jini2.entry.*;
 import java.util.concurrent.*;
 import java.util.prefs.*;
-import com.cytetech.jini.ApplicationUIDescriptor;
+// import com.cytetech.jini.ApplicationUIDescriptor;
 
 /**
  *  This is an application meant to be given to users in an environment
@@ -273,6 +273,7 @@ public class JiniDeskTop extends ConfigurableJiniApplication
 				"net.jini.url|org.wonderly.url");
 		}
 		final Logger log = Logger.getLogger( JiniDeskTop.class.getName() );
+/*
 		ClassLoading.neverPrefer( Name.class.getName() );
 		ClassLoading.neverPrefer( ServiceInfo.class.getName() );
 		ClassLoading.neverPrefer( DesktopIcon.class.getName() );
@@ -280,7 +281,7 @@ public class JiniDeskTop extends ConfigurableJiniApplication
 		ClassLoading.neverPrefer( DesktopEntry.class.getName() );
 		ClassLoading.neverPrefer( DesktopGroup.class.getName() );
 		ClassLoading.neverPrefer( UIDescriptor.class.getName() );
-		ClassLoading.neverPrefer( ApplicationUIDescriptor.class.getName() );
+// 		ClassLoading.neverPrefer( ApplicationUIDescriptor.class.getName() );
 		ClassLoading.neverPrefer( AdminDescriptor.class.getName() );
 		ClassLoading.neverPrefer( JavaHelpEntry.class.getName() );
 		ClassLoading.neverPrefer( HtmlHelpEntry.class.getName() );
@@ -297,6 +298,7 @@ public class JiniDeskTop extends ConfigurableJiniApplication
 			ClassLoading.neverPrefer( com.artima.lookup.util.ConsistentSet.class.getName() );
 			ClassLoading.neverPrefer( new Object[]{}.getClass().getName() );
 			ClassLoading.neverPrefer( new byte[]{}.getClass().getName() );
+*/
 		// Use System look and feel by default.
 		String laf = UIManager.getSystemLookAndFeelClassName();
 		if( System.getProperty("org.wonderly.desktop.laf") != null ) {
@@ -3179,7 +3181,8 @@ public class JiniDeskTop extends ConfigurableJiniApplication
 	
 	public UIDescriptor getDescriptor() {
 		log.info("allDesc == "+allDesc );
-		return allDesc.isSelected() ? new UIDescriptor() : new ApplicationUIDescriptor();
+		return new UIDescriptor();
+//		return allDesc.isSelected() ? new UIDescriptor() : new ApplicationUIDescriptor();
 	}
 
 	/** The default template for any serviceUI services. */

@@ -1,4 +1,4 @@
-<project name="startnow" default="build">
+<project name="startnow" default="all">
 <property name="root" location="c:/cvs/java.net/startnow"/>
 <property name="c" location="lib"/>
 <property name="cl" location="j:"/>
@@ -292,10 +292,10 @@
 
 	<javac debug="true"	destdir="${classes}"
 		target="1.5" source="1.5"
-		
 			classpathref="startnow.classpath">
 		<src path="${adminuisrc}"/>
 		<src path="${startnowsrc}"/>
+		<exclude name="org/wonderly/jini2/start/*.java"/>
 	</javac>
 
 </target>

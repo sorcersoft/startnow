@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>
+</title>
+</head>
+<body>
+The events package provides a mechanism for a large number of events
+to flow from a server to a client without the use of callbacks or
+other mechanims which might be difficult because of server firewalling.
+<p>
+The intended use for this infrastructure is that an application is 
+generating a large number of events that are topic based (or could be 
+topic based).  The intent is that the application will create an
+instance of the EventManager class (or another implementation of
+IEventManager).  It will then make this IEventManager visible to
+other users via Jini LUS registration.  
+<p>
+Clients will find and use an implementation of IEventManager,
+and register for events.  The server application will pump out
+events by calling EventManager.deliverEvent() (or other appropriate
+method for another IEventManager implementation).  These classes
+provide all the other mechanics of event delivery from the server
+to the subscribed clients.
+<p>
+The clients can use the methods in the IEventListener implementation
+that is returned from IEventManager.register() to confine or
+expand their subscription dynamically.
+<p>
+<b>Important Note:</b> This functionality does not provide any
+guarentee of event delivery.  It is intended to be used for delivery
+of events that will be informational in nature.  EventManager passes
+a defauly highwater mark of 20 to limit queued events.  If the
+thread delivering events out to the client
+can not keep up with the outgoing rates, events will be
+dropped to keep the VM from exploding in size due to queuing backups.
+<p>
+Its not possible to guarentee that all events will make it from one
+VM to another without adding the overhead of transactions.  This
+system was not designed to be used with transactional overhead.
+Instead, it was designed for event traffic that sends the current
+status of all data on a regular basis so that the current state of
+that data will be visible to the subscribers.  Short lived event
+status fluxuations should not be important in application using this
+type of non-guarenteed event propigation.
+</body>
+</html>

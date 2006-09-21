@@ -1,0 +1,51 @@
+	class ClassItem {
+		String name;
+		String cls;
+		public ClassItem( String name, String cls ) {
+			this.name = name;
+			this.cls = cls;
+		}
+		public String toString() {
+			return name;
+		}
+	}
+
+	void setup() {
+		Packer pk = new Packer( frm.getContentPane() );
+		endPoints = new JComboBox();
+		endPoints.addItem( new ClassItem( "TcpServerEndPoint", "" ));
+		endPoints.addItem( new ClassItem( "SSLServerEndPoint", "" ));
+		endPoints.addItem( new ClassItem( "HttpServerEndPoint", "" ));
+		endPoints.addItem( new ClassItem( "HttpsServerEndPoint", "" ));
+		endPoints.addItem( new ClassItem( "KerberosServerEndPoint", "" ));
+		exporters = new JComboBox();
+		exporters.addItem( new ClassItem( "JrmpExporter", "" ));
+		exporters.addItem( new ClassItem( "ActivationExporter", "" ));
+		exporters.addItem( new ClassItem( "BasicJeriExporter", "" ));
+		exporters.addItem( new ClassItem( "IiopExporter", "" ));
+		exporters.addItem( new ClassItem( "InstantiatorAccessExporter", "" ));
+		exporters.addItem( new ClassItem( "MonitorAccessExporter", "" ));
+		exporters.addItem( new ClassItem( "ProxyTrustExporter", "" ));
+		exporters.addItem( new ClassItem( "SunJrmpExporter", "" ));
+		exporters.addItem( new ClassItem( "SystemAccessExporter", "" ));
+		preparers = new JComboBox();
+		preparers.addItem( new ClassItem( "BasicProxyPreparer", "" ));
+		int y = -1;
+		srvConstraints = new ChoicePane( "Server Constraints" );
+		clientConstraints = new ChoicePane( "Client Constraints" );
+		JPanel cb = new JPanel();
+		Packer bpk = new Packer( cb );
+		pk.pack( cb ).gridx(0).gridy(0).fillboth();
+		bpk.pack( endPoints ).gridx(0).gridy(++y).fillx();
+		bpk.pack( preparers ).gridx(0).gridy(++y).fillx();
+		bpk.pack( exporters ).gridx(0).gridy(++y).fillx();
+		bpk.pack( new JPanel() ).gridx(0).gridy(++y).filly();
+		JPanel cp = new JPanel();
+		Packer cpk = new Packer( cp );
+		pk.pack( cp ).gridx(1).gridy(0).gridh(3).filly();
+		cpk.pack( srvConstraints ).gridx(0).gridy(0).fillboth();
+		cpk.pack( clientConstraints ).gridx(0).gridy(1).fillboth();		
+		frm.pack();
+		frm.setLocationRelativeTo( null );
+		frm.setVisible(true);
+	}
