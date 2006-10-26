@@ -1,0 +1,56 @@
+<html>
+<head>
+
+<title>PersistentJiniService Configuration</title>
+</head>
+<body>
+<h1>PersistentJiniService Configuration</h1>
+<table border="1">
+<tr><th>Entry<th>Type<th>Default<th>Discussion
+<tr><th>serviceName<td>java.lang.String<td>"Service"<td>The name of the service will be used to create a Name Entry.
+<tr><th>persistFile<td>java.lang.String<td>"service.ser"<td>This is the name of the file that will be used to persist the service state.
+<tr><th>loginContext<td>javax.security.auth.login.LoginContext<td>&lt;none&gt;<td>This login context will be used to login prior to starting
+service activation when <code>startService(...)</code> is called.
+<tr><td>groups<td>String[]<td>new String[]{""}<td>By default all public groups are used.
+<tr><td>locators<td>LookupLocator[]<td>
+<pre>
+new LookupLocator[]{
+    new LookupLocator("jini://localhost")
+}
+</pre>
+<td>A default lookup to the local host is performed in case multicast is not configured.
+<tr><td>exporter<td>net.jini.export.Exporter<td>
+<pre>
+new BasicJeriExporter( 
+    SslServerEndpoint.getInstance(0),
+    new BasicILFactory(
+	new BasicMethodConstraints(
+	    new InvocationConstraints(
+		new InvocationConstraint[]{},
+		new InvocationConstraint[]{} 
+	    )
+	), AccessPermission.class
+    )
+)
+</pre>
+<td>The various values shown, are produced by overrideable methods that the
+application can choose to replace with functionality that returns Configuration
+values, or other values.
+<tr><td>preparer<td>net.jini.security.ProxyPreparer<td>
+<pre>
+new BasicProxyPreparer();
+</pre>
+<td>
+<tr><td>logger<td>java.util.logging.Logger<td>Logger.getInstance( getClass().getName() )<td>
+<tr><td>loggingConfig<td>java.util.String<td>use system configured logging<td>This entry is a multi-lined string
+value that can contain a complete logging configuration as might be found in a file pointed to by the
+java.util.logging.config.file system property.
+<tr><td>otherLoggers
+<tr><td>logLevel
+<tr><td>loginContext
+<tr><td>lookupenvs
+<tr><td>entries
+<tr><td>template
+</table>
+</body>
+</html>
