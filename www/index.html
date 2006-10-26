@@ -26,88 +26,38 @@ Here are the top level classes that I find useful:
 <a name="p1"/>
 <h3><b>1. Concrete Jini Service Class for Jini'fying Existing Apps</b></h3>
 A <b>Jini service core</b> object that you can use as a base class or it can delegate
-to your existing service.&nbsp; The <tt>PersistantJiniService</tt> class
+to your existing service.&nbsp; The
+<a href="/nonav/www/api/docs/org/wonderly/jini2/PersistentJiniService.html">PersistentJiniService</a>
+class
 should be extended by your base class, adding whatever exportable interfaces
-you want in your implementation.</li>
+you want in your implementation.
 
-<h4>For Non-Remotely Administrable...</h4>
-Here we simply change the parent class from Object or whatever it was before to
-be the <code>PersistantJiniService</code> class so that we get all of its
-behavior.
+A simple example is shown below.  There is
+<a href="jiniservice.html">a tutorial</a> about using this class.
+
 <pre>
-public class MyService extends PersistantJiniService implements MyServiceInterface {
-	public MyService() throws RemoteException {
-		String name = "MyService";
+import org.wonderly.jini2.PersistentJiniService;
+import java.io.IOException;
+import net.jini.config.ConfigurationException;
+
+public class MyService extends PersistentJiniService implements MyServiceInterface {
+
+	public MyService( String args[] ) throws IOException,ConfigurationException {
+		// Create configuration and setup some things
+		super(args);
+
 		// Start the jini service registration process
-		startService( name, "jini-state.ser",
-			new Entry[] {
-				new Name( name )
-			}, new String[]{""}, null,
-			new OutputStreamWriter(System.out) );
+		startService();
 	}
 	public void myServiceMethod1() {
+		...
 	}
 	public int myServiceMethod2( String arg1 ) {
+		...
 	}
 }
 </pre>
 
-<h4>For Remotely Administrable...</h4>
-Here we add the Administrable interface so that the <code>getAdmin()</code> method is visible via that interface and the Jini admin interfaces will thus be
-accessible.
-<pre>
-public class MyService extends PersistantJiniService implements MyServiceInterface, RemoteAdministrable {
-	public MyService() throws RemoteException {
-		super();
-		// Start the jini service registration process
-		String name = "MyService";
-		startService( name, "jini-state.ser",
-			new Entry[] {
-				new Name( name )
-			}, new String[]{""}, null,
-			new OutputStreamWriter(System.out) );
-	}
-	public void myServiceMethod1() {
-	}
-	public int myServiceMethod2( String arg1 ) {
-	}
-}
-</pre>
-
-You could also just export a different object that delegates to your existing
-application/class if you can not extend <tt>PersistantJiniService.</tt>
-
-<h4>For Delegating to the Original Application...</h4>
-In this case we just create a new class the extends
-<code>PersistantJiniService</code> and create an instance of our applications
-class.  We start Jini up and can thus delegate using the <code>app</code>
-reference to our application instance.
-<pre>
-class MyPersistantJiniService extends PersistantJiniService
-	implements MyServiceInterface,Administrable {
-	MyExistingApp app;
-	public MyPersistantJiniService(String args[]) {
-		super();
-		// Create the application, this constructor must
-		// return...
-		app = new MyExistingApp(args);
-
-		// Start the jini service registration process
-		String name = "MyService";
-		startService( name, "jini-state.ser",
-			new Entry[] {
-				new Name( name )
-			}, new String[]{""}, null,
-			new OutputStreamWriter(System.out) );
-	}
-	public void myServiceMethod1() {
-		app.myServiceMethod1();
-	}
-	public int myServiceMethod2( String arg1 ) {
-		app.myServiceMethod2(arg1);
-	}
-}
-</pre>
 <hr size="5"/>
 <a name="p2"/>
 <h3><b>2. Jini Lookup Services Environment Container Class.</b></h3>

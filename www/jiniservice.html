@@ -1,0 +1,105 @@
+<html>
+<head>
+<title>Using PersistentJiniService</title>
+</head>
+<body>
+The 
+<a href="/nonav/www/api/docs/org/wonderly/jini2/PersistentJiniService.html">PersistentJiniService</a>
+class provides a wide range of tools for registering persistent jini services.  It supports the use
+of a Configuration, and allows that Configuration to be used by the underlying Jini APIs.  In the
+following sections, there are code fragments that show the simple amount of code you have to write to
+create Jini services.  The support for this is provided through the Configuration handling provided
+by the
+<a href="/nonav/www/api/docs/org/wonderly/jini2/ConfigurableJiniApplication.html">ConfigurableJiniApplication</a>
+class which is subclassed by 
+<a href="/nonav/www/api/docs/org/wonderly/jini2/PersistentJiniService.html">PersistentJiniService</a>.
+
+<h4>For Non-Remotely Administrable...</h4>
+Here we simply change the parent class from Object or whatever it was before to be the
+<a href="/nonav/www/api/docs/org/wonderly/jini2/PersistentJiniService.html">PersistentJiniService</a>
+class so that we get all of its behavior.
+<pre>
+import org.wonderly.jini2.PersistentJiniService;
+import java.io.IOException;
+import net.jini.config.ConfigurationException;
+
+public class MyService extends PersistentJiniService implements MyServiceInterface {
+
+	public MyService( String args[] ) throws IOException,ConfigurationException {
+		// Create configuration and setup some things
+		super(args);
+
+		// Start the jini service registration process
+		startService();
+	}
+	public void myServiceMethod1() {
+		...
+	}
+	public int myServiceMethod2( String arg1 ) {
+		...
+	}
+}
+</pre>
+
+<h4>For Remotely Administrable...</h4>
+Here we add the Administrable interface so that the <code>getAdmin()</code> method is visible
+via that interface and the Jini admin interfaces will thus be accessible.
+<pre>
+import org.wonderly.jini2.PersistentJiniService;
+import org.wonderly.jini.RemoteAdministrable;
+import java.io.IOException;
+import net.jini.config.ConfigurationException;
+
+public class MyService extends PersistentJiniService implements MyServiceInterface, RemoteAdministrable {
+	public MyService( String args[] ) throws IOException,ConfigurationException {
+		// Create configuration and setup some things
+		super(args);
+
+		// Start the jini service registration process
+		startService();
+	}
+	public void myServiceMethod1() {
+		...
+	}
+	public int myServiceMethod2( String arg1 ) {
+		...
+	}
+}
+</pre>
+
+You could also just export a different object that delegates to your existing
+application/class if you can not extend <tt>PersistentJiniService.</tt>
+
+<h4>For Delegating to the Original Application...</h4>
+In this case we just create a new class the extends
+<code>PersistentJiniService</code> and create an instance of our applications
+class.  We start Jini up and can thus delegate using the <code>app</code>
+reference to our application instance.
+<pre>
+class MyPersistentJiniService extends PersistentJiniService
+	implements MyServiceInterface,Administrable {
+	MyExistingApp app;
+	public MyPersistentJiniService(String args[]) {
+		super();
+		// Create the application, this constructor must
+		// return...
+		app = new MyExistingApp(args);
+
+		// Start the jini service registration process
+		String name = "MyService";
+		startService( name, "jini-state.ser",
+			new Entry[] {
+				new Name( name )
+			}, new String[]{""}, null,
+			new OutputStreamWriter(System.out) );
+	}
+	public void myServiceMethod1() {
+		app.myServiceMethod1();
+	}
+	public int myServiceMethod2( String arg1 ) {
+		app.myServiceMethod2(arg1);
+	}
+}
+</pre>
+
+<body>
