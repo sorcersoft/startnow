@@ -4,7 +4,7 @@
 <title>Using PersistentJiniService</title>
 </head>
 <body>
-<h3>Using PersistentJiniService</h3>
+<h1>Using PersistentJiniService</h1>
 The 
 <a href="/nonav/www/api/docs/org/wonderly/jini2/PersistentJiniService.html">PersistentJiniService</a>
 class provides a wide range of tools for registering persistent jini services.  It supports the use
@@ -16,7 +16,7 @@ by the
 class which is subclassed by 
 <a href="/nonav/www/api/docs/org/wonderly/jini2/PersistentJiniService.html">PersistentJiniService</a>.
 
-<h4>For Non-Remotely Administrable...</h4>
+<h2>For Non-Remotely Administrable...</h2>
 Here we simply change the parent class from Object or whatever it was before to be the
 <a href="/nonav/www/api/docs/org/wonderly/jini2/PersistentJiniService.html">PersistentJiniService</a>
 class so that we get all of its behavior.
@@ -43,7 +43,7 @@ public class MyService extends PersistentJiniService implements MyServiceInterfa
 }
 </pre>
 
-<h4>For Remotely Administrable...</h4>
+<h2>For Remotely Administrable...</h2>
 Here we add the Administrable interface so that the <code>getAdmin()</code> method is visible
 via that interface and the Jini admin interfaces will thus be accessible.
 <pre>
@@ -72,7 +72,7 @@ public class MyService extends PersistentJiniService implements MyServiceInterfa
 You could also just export a different object that delegates to your existing
 application/class if you can not extend <tt>PersistentJiniService.</tt>
 
-<h4>For Delegating to the Original Application...</h4>
+<h2>For Delegating to the Original Application...</h2>
 In this case we just create a new class the extends
 <code>PersistentJiniService</code> and create an instance of our applications
 class.  We start Jini up and can thus delegate using the <code>app</code>
