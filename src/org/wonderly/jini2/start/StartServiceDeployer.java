@@ -25,7 +25,7 @@ import com.sun.jini.start.*;
 import java.rmi.*;
 
 /**
- *
+ * @see com.sun.jini.start.ServiceStarter
  * @author gregg
  */
 public class StartServiceDeployer extends com.sun.jini.start.ServiceStarter {
@@ -45,10 +45,10 @@ public class StartServiceDeployer extends com.sun.jini.start.ServiceStarter {
      * @param args <code>String[]</code> passed to 
      *             <code>ConfigurationProvider.getInstance()</code> in order
      *             to obtain a <code>Configuration</code> object.
-     * @see ServiceDescriptor
-     * @see SharedActivatableServiceDescriptor
-     * @see SharedActivationGroupDescriptor
-     * @see NonActivatableServiceDescriptor
+     * @see com.sun.jini.start.ServiceDescriptor
+     * @see com.sun.jini.start.SharedActivatableServiceDescriptor
+     * @see com.sun.jini.start.SharedActivationGroupDescriptor
+     * @see com.sun.jini.start.NonActivatableServiceDescriptor
      * @see net.jini.config.Configuration
      * @see net.jini.config.ConfigurationProvider
      */

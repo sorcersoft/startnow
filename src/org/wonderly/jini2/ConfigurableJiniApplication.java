@@ -354,6 +354,9 @@ public class ConfigurableJiniApplication extends NameableObjectImpl {
 			new ObjectCreator<Entry[]>() {
 				public Entry[] create()
 						throws IOException,ConfigurationException {
+					if( log.isLoggable(Level.FINE) ) {
+						log.fine("Looking for \"entries\" in "+no.getPackage()+"."+no.getName() );
+					}
 					return (Entry[])conf.getEntry( no.getPackage()+"."+no.getName(),
 						"entries", (new Entry[]{}).getClass(),
 						new Entry[]{new Name(no.getName())} );				
@@ -375,6 +378,9 @@ public class ConfigurableJiniApplication extends NameableObjectImpl {
 			new ObjectCreator<Entry[]>() {
 				public Entry[] create() 
 						throws IOException,ConfigurationException {
+					if( log.isLoggable(Level.FINE) ) {
+						log.fine("Looking for \"entries\" in "+getConfigComp() );
+					}
 					return (Entry[])conf.getEntry( getConfigComp(),
 						"entries", (new Entry[]{}).getClass(), 
 						new Entry[] { new Name(getName()) } );

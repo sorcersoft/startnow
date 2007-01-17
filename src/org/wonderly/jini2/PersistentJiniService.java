@@ -1,12 +1,12 @@
 package org.wonderly.jini2;
 
-import java.util.*;
 import java.security.*;
-import java.security.acl.*;
-import java.rmi.*;
-import java.rmi.server.*;
 import java.io.*;
 import java.lang.reflect.*;
+//import org.cheiron.jsc.JSCException;
+//import org.cheiron.jsc.JSCFailure;
+//import org.cheiron.jsc.ServiceContext;
+//import org.cheiron.jsc.ServiceState;
 
 import org.wonderly.util.jini.*;
 import net.jini.discovery.*;
@@ -15,35 +15,22 @@ import net.jini.core.lookup.*;
 import net.jini.lookup.entry.*;
 import net.jini.lookup.*;
 import net.jini.core.entry.*;
-import net.jini.core.lease.*;
-import net.jini.lease.*;
 import net.jini.admin.*;
-import net.jini.entry.*;
 
 import java.util.logging.*;
-import org.wonderly.log.*;
-import org.wonderly.jini.start.*;
-import java.awt.Image;
 import java.rmi.*;
-import java.rmi.server.*;
-
-import org.wonderly.jini.*;
+import java.util.Arrays;
 import net.jini.config.*;
 import net.jini.config.Configuration;
-import net.jini.config.ConfigurationProvider;
 import net.jini.config.ConfigurationException;
 import net.jini.export.Exporter;
-import org.wonderly.jini2.browse.*;
 import org.wonderly.util.jini2.JiniAdmin;
 import org.wonderly.util.jini2.AppPersistenceIO;
 import org.wonderly.jini.start.ServiceIDAccessor;
-import net.jini.jeri.BasicJeriExporter;
-import net.jini.jeri.tcp.TcpServerEndpoint;
-import net.jini.jeri.BasicILFactory;
-import net.jini.security.proxytrust.*;
 import net.jini.security.*;
 import javax.security.auth.Subject;
 import javax.security.auth.login.*;
+//import org.cheiron.jsc.JiniService;
 
 /**
  *  This class provides a base class for creating persistant Jini services under
@@ -607,7 +594,8 @@ public class PersistentJiniService
 
 		LookupLocator[]locators = app.getLocators();
 		log.fine( "creating lookup discovery manager for "+
-			(locators == null ? 0 : locators.length)+" locators" );
+			(locators == null ? 0 : locators.length)+" locators, "+
+			"groups="+(groups == null ? "<null>" : Arrays.toString( data.groups )) );
 		ctx.lm = new LookupDiscoveryManager( data.groups,
 				locators, new DiscoveryListener() {
 			public void discarded( DiscoveryEvent ev ) {
@@ -647,12 +635,12 @@ public class PersistentJiniService
 			ctx.haveServiceID = true;
 			log.info( "starting service with id: "+id );
 			ctx.join = new JoinManager( exported, items, id, 
-				ctx.lm, null );
+				ctx.lm, null, app.conf );
 		} else {
 			ctx.haveServiceID = false;
 			log.info( "waiting for service id" );
 			ctx.join = new JoinManager( exported, items, 
-				new IDListener(log,ctx), ctx.lm, null );
+				new IDListener(log,ctx), ctx.lm, null, app.conf );
 		}
 
 		log.fine("creating JiniAdmin for: "+ctx.join+", "+ctx.lm );
@@ -667,7 +655,7 @@ public class PersistentJiniService
 					log.fine("Check if state writable: "+ctx.appio.isWriteable() );
 					if( ctx.appio.isWriteable() ) {
 						log.finer("Writing ObjState: "+state+" to "+ctx.curFile+" using: "+ctx.appio );
-						writeObjState( state, ctx.curFile, ctx.appio );
+						writeObjState( log, state, ctx.curFile, ctx.appio );
 					}
 				}
 				public void setFile( String file ) throws IOException {
@@ -692,7 +680,7 @@ public class PersistentJiniService
 			}
 		});
 		ctx.state = data;
-		writeObjState( ctx, appio );
+		writeObjState( log, ctx, appio );
 		return ctx;
 	}
 
@@ -793,7 +781,11 @@ public class PersistentJiniService
 	}
 
 	public static void writeObjState( JoinContext ctx, AppPersistenceIO io ) throws IOException {
-		ctx.state = writeObjState( ctx.state, ctx.curFile, io );
+		writeObjState( Logger.getLogger( PersistentJiniService.class.getName() ),
+			ctx, io );
+	}
+	public static void writeObjState( Logger log, JoinContext ctx, AppPersistenceIO io ) throws IOException {
+		ctx.state = writeObjState( log, ctx.state, ctx.curFile, io );
 	}
 
 	protected static Object readObjectEntry( ObjectInputStream is 
@@ -835,7 +827,16 @@ public class PersistentJiniService
 	 */
 	public static PersistentData writeObjState( PersistentData state,
 			String curFile, AppPersistenceIO appio ) throws IOException {
-		Logger log = Logger.getLogger( PersistentJiniService.class.getName() );
+		return writeObjState( Logger.getLogger( PersistentJiniService.class.getName() ),
+			state, curFile, appio );
+	}
+
+	/**
+	 *  Writes out the complete serialized state including the
+	 *  <code>state</code> parameter and calling <code>writeAppState()</code>.
+	 */
+	public static PersistentData writeObjState( Logger log, PersistentData state,
+			String curFile, AppPersistenceIO appio ) throws IOException {
 		log.fine("writing state to: "+curFile );
 		FileOutputStream fs = new FileOutputStream( new File( curFile ) );
 		try {
@@ -939,8 +940,10 @@ public class PersistentJiniService
 				ObjectInputStream is = new ObjectInputStream( fs );
 				ver = is.readInt();
 				if(log.isLoggable(Level.FINER) ) log.finer
-					("Reading version="+ver+" serviceID state from "+f);
+					("Reading version="+ver+" serviceID (have="+data.id+") state from "+f);
 				data.id = (ServiceID)is.readObject();
+				if( log.isLoggable( Level.FINER) ) log.finer
+					("found old id: "+data.id );
 				is.close();
 			} finally {
 				fs.close();
@@ -982,6 +985,48 @@ public class PersistentJiniService
 			return null;
 		}
 	}
+
+//	private Logger svnlog = Logger.getLogger( getClass().getName()+".seven" );
+//	public void failureDetected(JSCFailure jSCFailure) {
+//		log.warning("failure of JSC container: "+jSCFailure );
+//	}
+//
+//	public Entry[] getAttributes(Entry[] entry) throws JSCException {
+//		if( entry == null || entry.length == 0 ) {
+//			try {
+//				Entry[] arr= getInitialEntrys();
+//				svnlog.info("using initial attributes: "+(arr != null ? Arrays.toString(arr) : "<null>") );
+//			} catch( ConfigurationException ex ) {
+//				throw (JSCException)new JSCException(ex.toString()).initCause(ex);
+//			} catch( IOException ex ) {
+//				throw (JSCException)new JSCException(ex.toString()).initCause(ex);
+//			}
+//		} else {
+//			svnlog.info("getting attributes, using existing "+entry.length+" attributes: "+
+//				Arrays.toString(entry) );
+//		}
+//		return entry;
+//	}
+//
+//	public Remote[] getServiceProviders() throws JSCException {
+//		svnlog.info("getServiceProviders returning this="+this );
+//		return new Remote[]{ this };
+//	}
+//
+//	public Object getServiceProxy(Object object) throws JSCException {
+//		svnlog.info("getServiceProxy passes in: "+object);
+//		return object;
+//	}
+//
+//	protected ServiceContext jscContext;
+//	public void init(ServiceContext serviceContext) throws JSCException {
+//		svnlog.info( "Got serviceContext: "+serviceContext );
+//		jscContext = serviceContext;
+//	}
+//
+//	public void stateChanged(ServiceState serviceState, ServiceState serviceState0) {
+//		svnlog.info("JSC State changed: "+serviceState+" was "+serviceState0 );
+//	}
 }
 
 

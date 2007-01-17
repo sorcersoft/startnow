@@ -106,15 +106,6 @@
 		todir="${jars}"/>
 	<copy file="${buildjars}/http-server.jar"
 		todir="${jars}"/>
-
-	<copy file="${buildjars}/startnow.jar"
-		todir="${j}"/>
-	<copy file="${buildjars}/startnow-concat.jar"
-		todir="${j}"/>
-	<copy file="${buildjars}/startnow-config.jar"
-		todir="${j}"/>
-	<copy file="${buildjars}/http-server.jar"
-		todir="${j}"/>		
 </target>
 
 <target name="cleanbld" unless="cleanbld-completed">
@@ -281,8 +272,8 @@
 		packagenames="">
 	<fileset dir="${adminuisrc}"/>
 	<fileset dir="${startnowsrc}"/>
+	<link href="http://java.sun.com/products/jini/2.1/doc/api/"/>
 	<link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
-	<link href="http://java.sun.com/products/jini/2.0/doc/api/"/>
 	</javadoc>
 </target>
 
