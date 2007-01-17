@@ -133,7 +133,7 @@
 </target>
 
 <target name="zipsrc" unless="zipsrc-completed">
-	<jar destfile="${www}/src.zip"
+	<zip destfile="${www}/src.zip"
 		>
 		<fileset dir="." includes="src/**"/> 
 		<fileset dir="." includes="test/**"/> 
@@ -141,7 +141,14 @@
 		<fileset dir="." includes="www/tut/"/> 
 		<fileset dir="." includes="*.xml"/> 
 		<fileset dir="." includes="*.ant"/> 
-	</jar>
+	</zip>
+</target>
+
+<target name="zipdocs" unless="zipdocs-completed">
+	<zip destfile="${www}/apidocs.zip"
+		>
+		<fileset dir="." includes="www/javadocs/**"/> 
+	</zip>
 </target>
 
 <target name="sysjar" unless="sysjar-completed">
@@ -260,7 +267,10 @@
 </target>
 
 <target name="javadoc" unless="javadoc-completed"
-	description="Build Javadoc Tree">
+	description="Build Javadoc Tree" depends="builddocs,zipdocs">
+</target>
+
+<target name="builddocs" unless="builddocs-completed">
 	<mkdir dir="www/javadocs"/>
 	<javadoc 
 		destdir="www/javadocs"
