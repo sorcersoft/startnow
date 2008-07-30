@@ -6,9 +6,11 @@ import javax.swing.*;
 import java.util.*;
 import java.util.logging.*;
 import java.awt.event.*;
-import java.awt.*;
 import java.security.*;
-import org.wonderly.awt.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *  This is the protocol handler for the vhttp protocol.
@@ -46,10 +48,15 @@ import org.wonderly.awt.*;
  *  @author <a href="mailto:gregg.wonderly@pobox.com">Gregg Wonderly</a>.
  */
 public class Handler extends URLStreamHandler {
-	static JFrame parent;
-	static String cache;
-	static String proto = "http";
-	static Logger log;
+//	static JFrame parent;
+	private static String cache;
+	private static String proto = "http";
+	private Logger log = Logger.getLogger( getClass().getName() );
+	private static ArrayList<DownloadListener> listeners = new ArrayList<DownloadListener>();
+	// Reference whether or not we've already added the default download listener.
+	private static DefaultDownloadListener defaultListener = null;
+	private LinkedBlockingQueue lisQueue = new LinkedBlockingQueue();
+	private ThreadPoolExecutor lisExec = new ThreadPoolExecutor( 1, 2, 15, TimeUnit.SECONDS, lisQueue );
 	
 	static {
 		String pr = System.getProperty("org.wonderly.vhttp.protocol");
@@ -58,11 +65,11 @@ public class Handler extends URLStreamHandler {
 		String cd = System.getProperty("org.wonderly.vhttp.cache");
 		if( cd != null )
 			cache = cd;
-		log = Logger.getLogger(Handler.class.getName());
-		if( log.isLoggable(Level.FINE)) log.fine("static initialization");
-		if( log.isLoggable(Level.FINE)) log.fine("protocol from system property: "+proto );
-		if( log.isLoggable(Level.FINE)) log.fine("cache from system property: "+cache );
-		if( log.isLoggable(Level.FINE)) log.fine("static init completed");
+		Logger log = Logger.getLogger(Handler.class.getName());
+		if( log.isLoggable(Level.FINE)) {
+			log.fine("protocol from \"org.wonderly.vhttp.protocol\" system property: "+proto );
+			log.fine("cache from \"org.wonderly.vhttp.cache\" system property: "+cache );
+		}
 	}
 
 	public static void main( String args[] ) throws Exception {
@@ -70,26 +77,45 @@ public class Handler extends URLStreamHandler {
 			System.getProperties().put("java.protocol.handler.pkgs",
 				"org.wonderly.url");
 		}
+		Logger log = Logger.getLogger( Handler.class.getName()+".main" );
+		log.setLevel( Level.FINE );
 		final JFrame top = new JFrame( "Testing download" );
 		top.setSize( 700, 500 );
 		top.setLocation( 100, 100 );
 		top.setVisible(true);
 		org.wonderly.url.vhttp.Handler.setParent(top);
-		org.wonderly.url.vhttp.Handler.setCacheDir("test-cache");
+		org.wonderly.url.vhttp.Handler.setCacheDir("c:/test-cache");
 		top.addWindowListener( new WindowAdapter() {
 			public void windowClosing( WindowEvent ev ) {
 //				System.gc();
 //				new File( "cache/reggie-dl.jar" ).delete();
 				top.dispose();
+				System.exit(1);
 			}
 		});
+		for( int i = 0; i < 100; ++i ) {
+			log.info("connectin: ["+i+"]");
 		URL u = new URL( "vhttp://chipmunk:8090/reggie-dl.jar" );
 		Object obj = u.getContent();
-		if( log.isLoggable(Level.FINE)) log.fine("got content: "+obj );
+		if( log.isLoggable(Level.INFO)) log.info("got content: "+obj );
 		u = null;
 		obj = null;
+		}
 	}
 	
+	public synchronized static void addDownloadListener(DownloadListener lis) {
+		listeners.add(lis);
+	}
+	public synchronized static void removeDownloadListener(DownloadListener lis) {
+		listeners.remove(lis);
+	}
+
+	// default is that we will check again with HEAD after 30secs to see if
+	// the cached file is out of date.
+	private static volatile long dltimeout = 30000;
+	public static void setDownloadCacheTimeout( long val ) {
+		dltimeout = val;
+	}
 	/**
 	 *  Set the currently used protocol for final retrieval
 	 */
@@ -110,12 +136,20 @@ public class Handler extends URLStreamHandler {
 		if( log.isLoggable(Level.FINE)) log.fine("Constructing: "+this );
 	}
 
-	public static void setParent( JFrame par ) {
-		parent = par;
+	public static synchronized void setParent( JFrame parent ) {
+		Logger log = Logger.getLogger( Handler.class.getName() );
 		if(log.isLoggable(Level.FINE)) log.fine( "Parent set to: "+parent );
+		
+		// Add a default listener for backwards compatibility, to provide a progress indication.
+		if (defaultListener == null) {
+			addDownloadListener(defaultListener = new DefaultDownloadListener(parent));
+		} else {
+			defaultListener.setParent( parent );
+		}
 	}
 
 	public static void setCacheDir( String dir ) {
+		Logger log = Logger.getLogger( Handler.class.getName() );
 		if( log.isLoggable(Level.FINE)) log.fine("setting cache ("+cache+") to: "+dir );
 		cache = dir;
 		new File(cache).mkdirs();
@@ -136,7 +170,7 @@ public class Handler extends URLStreamHandler {
 					return openIt( url );
 				} catch( IOException ex ) {
 					exc[0] = ex;
-					log.log(Level.SEVERE, ex.toString(), ex );
+					log.log(Level.FINE, ex.toString(), ex );
 					return null;
 				}
 			}
@@ -144,19 +178,22 @@ public class Handler extends URLStreamHandler {
 		if( ret == null && exc[0] != null )
 			throw exc[0];
 		return ret;
-	} 
+	}
 	
 	public static void holdOffDownloadOf( URL u, Long time ) {
+		Logger log = Logger.getLogger( Handler.class.getName() );
 		if( log.isLoggable(Level.FINE) ) {
 			log.fine("holdoffdownload: "+u+", till: "+
 				new Date(time.longValue()+(60*1000) )+": lastget="+lastget );
 		}
-		lastget.put( u, new Long( time+(60*1000)) );
+		lastget.put( u.toString(), new Long( time+(60*1000)) );
 	}
 	
 	// This hashtable holds references until GC and then we'll check again
-	private static WeakHashMap<URL,Long> lastget = new WeakHashMap<URL,Long>();
+	private static ConcurrentHashMap<String,Long> lastget = new ConcurrentHashMap<String,Long>();
+	
 	private java.net.URLConnection openIt( URL url ) throws IOException {
+		
 		if( log.isLoggable(Level.FINE)) log.fine("=== openit(\""+url+"\") cache: "+cache );
 		String p = url.getPath();
 		if( cache == null ) {
@@ -174,6 +211,21 @@ public class Handler extends URLStreamHandler {
 		} else {
 			if( log.isLoggable(Level.FINE)) log.fine("existing cache dir: "+dc );
 		}
+		
+		if( log.isLoggable( Level.FINE ) ) {
+			log.fine("trimming lastget entries: "+lastget.size() );
+		}
+
+		for( String k : lastget.keySet() ) {
+			long l = lastget.get( k );
+			if( l < System.currentTimeMillis() - dltimeout ) {
+				if( log.isLoggable( Level.FINE ) ) {
+					log.fine("removed last get time for: "+k );
+				}
+				lastget.remove( k );
+			}
+		}
+		// Put logging messages here to help track when downloads fail, why exceptions aren't seen....
 		String f = url.getFile();
 		File cd = new File( dc, p );
 		if( log.isLoggable(Level.FINER)) log.finer("cd is: "+cd );
@@ -199,40 +251,53 @@ public class Handler extends URLStreamHandler {
 		}
 
 		URL u = new URL( proto+"://"+url.getHost()+":"+url.getPort()+p ); //+"/"+f );
-			Long lastTime = (Long)lastget.get(url);
+		Long lastTime = (Long)lastget.get(url.toString());
 		if( log.isLoggable(Level.FINE)) {
 			log.fine("Checking cachefile: "+file+" with url="+url+", time: "+
 				(lastTime == null ? "<none>" : (""+
 				new Date( lastTime.longValue() )))+", lastget: "+lastget );
 		}
+		boolean checking = false;
 		String tnm = Thread.currentThread().getName();
 		java.net.URLConnection uc = null;
-		if( lastTime == null || (System.currentTimeMillis() - lastTime.longValue()) > 60*1000 ) {
-			if( log.isLoggable(Level.FINE)) {
-				log.fine("Connecting to "+u+" to check date/time/size");
-			}
+		if( lastTime == null || (System.currentTimeMillis() - lastTime.longValue()) > dltimeout ) {
 
 			if( log.isLoggable(Level.FINE)) log.fine("Connecting to "+u+" to check date/time/size");
 			uc = u.openConnection();
+			if( log.isLoggable(Level.FINER)) log.finer("Connected to "+u+" to check date/time/size");
 			
 			try {
 				Thread.currentThread().setName( "Check: "+u.toString() );
 			
 				// Deny caching from previous fetch
 				uc.setUseCaches(false); 
-		
-				if( uc instanceof HttpURLConnection )
+
+				if( uc instanceof HttpURLConnection ) {
+					if( log.isLoggable(Level.FINER)) log.finer("Notifying Listeners for Check of: "+url );
+					
+					// Checking...
+					notifyChecking(url);
+					checking = true;
+					
+					if( log.isLoggable(Level.FINER)) log.finer("Requesting HEAD for check of: "+url );
 					((HttpURLConnection)uc).setRequestMethod("HEAD");
+				}
 		
 				// Force connection to web server
+				InputStream tmpIs = null;
 				try {
-					uc.getInputStream();
+					tmpIs = uc.getInputStream();
 				} catch( Exception ex ) {
-					ex.printStackTrace();
+					log.log( Level.SEVERE, ex.toString(), ex );
+				} finally {
+					try {
+						if (tmpIs != null) tmpIs.close();
+					} catch (Exception exx) { exx.printStackTrace(); }
 				}
-				if( log.isLoggable(Level.FINE)) log.fine("Connected to "+u);
+				if( log.isLoggable(Level.FINER)) log.finer("Connected to "+u);
 		
 				if( file.exists() ) {
+					if( log.isLoggable(Level.FINE)) log.fine( "Got connection, checking cached file info: "+u );
 					long flast = file.lastModified();
 					long ulast = uc.getLastModified();
 					int len = uc.getContentLength();
@@ -252,13 +317,13 @@ public class Handler extends URLStreamHandler {
 						if( log.isLoggable(Level.FINE)) log.fine("Cache uptodate");
 					}
 				}
-				lastget.put( url, new Long( System.currentTimeMillis() ) );
+				lastget.put( url.toString(), new Long( System.currentTimeMillis() ) );
 			} finally {
 				// Force stream closed, don't need HEAD output after here.
 				try {
 					uc.getInputStream().close();
 				} catch( Exception ex ) {
-					ex.printStackTrace();
+					log.log( Level.SEVERE, ex.toString(), ex );
 				}
 				Thread.currentThread().setName( tnm );
 			}
@@ -270,53 +335,31 @@ public class Handler extends URLStreamHandler {
 
 		if( log.isLoggable(Level.FINER)) log.finer("after date check, file: "+file+" exists? "+file.exists() );
 		// Is the file already in the cache?
+		
+		// Check complete
+		if( checking )
+			notifyCheckComplete(url, !file.exists());
+		
 		if( file.exists() == false ) {
 			if( log.isLoggable(Level.FINE)) log.fine("No local file, downloading...");
-		Thread.currentThread().setName( "Download: "+u.toString() );
+			Thread.currentThread().setName( "Download: "+u.toString() );
 			uc = u.openConnection();
 			pd.mkdirs();
-			JDialog d = null;
-			JLabel plab = null;
-			JProgressBar bar = null;
-			JLabel info = null;
-			if( log.isLoggable(Level.FINER)) log.finer("creating dialog for progress display: "+parent);
-			if( parent != null ) {
-				d = new JDialog( parent, "Downloading into "+file.getName(), false );				
-				Packer pk = new Packer( d.getContentPane() );
-
-				plab = new JLabel( "0 of 0 - 0%", JLabel.CENTER );
-				pk.pack( plab ).fillx().gridx(0).gridy(0).inset(5,5,5,5);
-				plab.setBorder( BorderFactory.createEtchedBorder() );
-				
-				bar = new JProgressBar(0,0, 1000);
-				pk.pack( bar ).fillx().gridx(0).gridy(1).inset(5,5,5,5);
-
-				info = new JLabel( "Downloading "+file.getName()+" from "+u.getHost(), JLabel.CENTER );
-				pk.pack( info ).gridx(0).gridy(2).fillx().inset(5,5,5,5);
-				info.setBorder( BorderFactory.createEtchedBorder() );
-
-				bar.setValue(1);
-
-				d.setDefaultCloseOperation( d.DO_NOTHING_ON_CLOSE );
-				d.pack();
-				d.setLocationRelativeTo( parent );
-				d.setVisible(true);
-			}
+			
+			if( log.isLoggable(Level.FINER)) log.finer("creating dialog for progress display");
 
 			try {
 				log.info( "downloading to \""+file+"\", via: \""+u+"\"" );
+				
+				
 				// Make connection first
 				InputStream is = uc.getInputStream();
 
 				// Find out how much to download
 				long length = uc.getContentLength();
-				if( bar != null ) {
-					// Set up progress bar with amount to download if active
-					bar.setValue(0);
-					bar.setMinimum(0);
-					bar.setMaximum( (int)length );
-				}
-
+				
+				notifyDownloadStarted(url, length);
+				
 				// Create output stream to cached file
 				OutputStream os = new FileOutputStream(file);
 				byte[]arr = new byte[1024];
@@ -326,44 +369,50 @@ public class Handler extends URLStreamHandler {
 					while( ( n = is.read(arr, 0, arr.length) ) >= 0 ) {
 						os.write( arr, 0, n );
 						cnt += n;
-						if( bar != null ) {
-							bar.setValue( cnt );
-							bar.repaint();
-							plab.setText( cnt+" of "+length+" - "+((cnt*100)/length)+"%" );
-							plab.revalidate();
-							plab.repaint();
-						}
+						notifyDownloadProgress(url, cnt);
+					}					
+					
+					// Check if download was aborted prematurely.
+					if (cnt != length) {
+						throw new IOException("Read failed on URL: "+url+", only got "+cnt+" of "+length+" bytes");
 					}
-					// do close here in case file can not be written
-					os.close();
-					os = null;
-				} catch( Exception ex ) {
-					ex.printStackTrace();
-					if( os != null ) {
-						try {
+					
+				} catch( IOException ex ) {
+					log.log(Level.WARNING, ex.toString(), ex );
+					try {
+						if( os != null ) {
 							os.close();
-						} catch( Exception exx ) {
-							exx.printStackTrace();
+						}
+					} catch( IOException exx ) {
+						log.log(Level.WARNING, exx.toString(), exx );
+					} finally {
+						try {
+							if (is != null) {
+								is.close();
+							}
+						} catch ( IOException exxx) {
+							log.log(Level.WARNING, exxx.toString(), exxx );
 						}
 					}
+					
 					file.delete();
 					
 					// Just return uncached stream if caching fails
-					return u.openConnection();
+					//return u.openConnection();
+					throw ex;
 				} finally {
 					is.close();
+					os.close();
 				}
-			} finally {
-				if( d != null ) {
-					d.setVisible(false);
-					d.dispose();
-				}
+			} finally {	
 				Thread.currentThread().setName( tnm );
 			}
+
+			notifyDownloadFinished(url);
 		}
 
 		try {
-		Thread.currentThread().setName( "Using: "+u.toString() );
+			Thread.currentThread().setName( "Using: "+u.toString() );
 			if( log.isLoggable(Level.FINER)) log.finer("File part of url: "+fp );
 			u = new URL( new URL( "file:"+npref+durl/*.replace(' ','+')*/ ), "file:"+npref+fp ); //+"/"+f );
 			URLConnection ruc = null;
@@ -375,9 +424,82 @@ public class Handler extends URLStreamHandler {
 		} catch( IOException ex ) {
 			log.log(Level.WARNING, ex.toString(), ex );
 		} finally {
-		Thread.currentThread().setName( tnm );
+			Thread.currentThread().setName( tnm );
 		}
 
 		return u.openConnection();
+	}
+	
+	
+	
+	
+	
+	private synchronized void notifyDownloadStarted( final URL url, final long length) {
+		// Inform listeners that the download is starting.
+		for( final DownloadListener lis : listeners) {
+			lisExec.execute( new Runnable() {
+				public void run() {	
+					try {
+						lis.downloadStarted( url, length);
+					} catch( Exception ex ) {
+						log.log(Level.WARNING, ex.toString(), ex );
+					}
+				}
+			});
+		}		
+	}
+	private synchronized void notifyDownloadProgress( final URL url, final int cnt) {
+		// Inform listeners of download progress
+		for( final DownloadListener lis : listeners) {
+			lisExec.execute( new Runnable() {
+				public void run() {	
+					try {
+						lis.downloadProgress(url, cnt);
+					} catch( Exception ex ) {
+						log.log(Level.WARNING, ex.toString(), ex );
+					}
+				}
+			});
+		}
+	}
+	private synchronized void notifyDownloadFinished( final URL url) {
+		// Inform listeners of download finished.
+		for( final DownloadListener lis : listeners) {
+			lisExec.execute( new Runnable() {
+				public void run() {	
+					try {
+						lis.downloadFinished(url);
+					} catch( Exception ex ) {
+						log.log(Level.WARNING, ex.toString(), ex );
+					}
+				}
+			});
+		}
+	}
+	private synchronized void notifyChecking( final URL url) {
+		for( final DownloadListener lis : listeners) {
+			lisExec.execute( new Runnable() {
+				public void run() {	
+					try {
+						lis.checking(url);
+					} catch (Exception ex) {
+						log.log(Level.WARNING, ex.toString(), ex );
+					}
+				}
+			});
+		}
+	}
+	private synchronized void notifyCheckComplete( final URL url, final boolean willDownload) {
+		for( final DownloadListener lis : listeners) {
+			lisExec.execute( new Runnable() {
+				public void run() {	
+					try {
+						lis.checkComplete(url, willDownload);
+					} catch (Exception ex) {
+						log.log(Level.WARNING, ex.toString(), ex );
+					}
+				}
+			});
+		}
 	}
 }
